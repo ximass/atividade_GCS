@@ -9,3 +9,6 @@ Route::get('/', function () {
 });
 
 Route::get('/tarefas', [TarefaController::class, 'index']);
+
+Route::resource('tarefas', TarefaController::class);
+Route::get('/tarefas/{id}', [TarefaController::class, 'show']);

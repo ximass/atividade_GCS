@@ -9,6 +9,29 @@
     <div class="container mt-5">
         <h1 class="mb-4">Listagem de Tarefas</h1>
         <a href="{{ route('tarefas.create') }}" class="btn btn-primary mb-3">Nova Tarefa</a>
+        <a href="{{ route('tarefas.export.pdf', request()->all()) }}" class="btn btn-danger mb-3 ms-2">Exportar para PDF</a>
+
+        <!-- Filtro de tarefas -->
+        <form method="GET" action="{{ route('tarefas.index') }}" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label for="data" class="form-label">Data de Criação</label>
+                <input type="date" id="data" name="data" class="form-control" value="{{ request('data') }}">
+            </div>
+            <div class="col-md-4">
+                <label for="situacao" class="form-label">Situação</label>
+                <select id="situacao" name="situacao" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="pendente" {{ request('situacao') == 'Pendente' ? 'selected' : '' }}>Pendente</option>
+                    <option value="concluída" {{ request('situacao') == 'Concluída' ? 'selected' : '' }}>Concluída</option>
+                    <option value="em_andamento" {{ request('situacao') == 'Em Andamento' ? 'selected' : '' }}>Em Andamento</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-secondary">Filtrar</button>
+            </div>
+        </form>
+        <!-- Fim do filtro -->
+
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>

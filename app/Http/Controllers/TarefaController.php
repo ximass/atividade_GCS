@@ -5,12 +5,24 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TarefaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tarefas = DB::table('tarefa')->get();
+        $query = DB::table('tarefa');
+
+        if ($request->filled('data')) {
+            $query->whereDate('data_criacao', $request->input('data'));
+        }
+
+        if ($request->filled('situacao')) {
+            $query->where('situacao', $request->input('situacao'));
+        }
+
+        $tarefas = $query->get();
+
         return view('tarefas.index', compact('tarefas'));
     }
 
@@ -60,5 +72,25 @@ class TarefaController extends Controller
     {
         DB::table('tarefa')->where('id', $id)->delete();
         return redirect()->route('tarefas.index')->with('success', 'Tarefa excluída com sucesso!');
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = DB::table('tarefa');
+
+        // Filtro por data de criação
+        if ($request->filled('data')) {
+            $query->whereDate('data_criacao', $request->input('data'));
+        }
+
+        // Filtro por situação
+        if ($request->filled('situacao')) {
+            $query->where('situacao', $request->input('situacao'));
+        }
+
+        $tarefas = $query->get();
+
+        $pdf = Pdf::loadView('tarefas.pdf', compact('tarefas'));
+        return $pdf->download('tarefas.pdf');
     }
 }

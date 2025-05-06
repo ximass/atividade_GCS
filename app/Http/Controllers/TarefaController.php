@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Log;
 
 class TarefaController extends Controller
 {
@@ -41,7 +42,11 @@ class TarefaController extends Controller
             'situacao'          => $request->situacao,
         ]);
 
-        return redirect()->route('tarefas.index')->with('success', 'Tarefa criada com sucesso!');
+        // Simulação de envio de e-mail
+        Log::info('Simulação: E-mail enviado ao criar tarefa: ' . $request->descricao);
+
+        return redirect()->route('tarefas.index')
+            ->with('success', 'Tarefa criada com sucesso! (Simulação de envio de e-mail)');
     }
 
     public function show($id)
@@ -65,7 +70,11 @@ class TarefaController extends Controller
             'situacao'          => $request->situacao,
         ]);
 
-        return redirect()->route('tarefas.index')->with('success', 'Tarefa atualizada com sucesso!');
+        // Simulação de envio de e-mail
+        Log::info('Simulação: E-mail enviado ao atualizar tarefa ID: ' . $id);
+
+        return redirect()->route('tarefas.index')
+            ->with('success', 'Tarefa atualizada com sucesso! (Simulação de envio de e-mail)');
     }
 
     public function destroy($id)

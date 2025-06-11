@@ -16,7 +16,10 @@ class TarefaControllerTest extends TestCase
 {
     public function testIndexReturnsView()
     {
-        DB::shouldReceive('table->get')->andReturn(collect([]));
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('get')->andReturn(collect([]));
+        DB::shouldReceive('table')->with('tarefa')->andReturn($queryMock);
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET');
         $response = $controller->index($request);
@@ -101,7 +104,12 @@ class TarefaControllerTest extends TestCase
 
     public function testIndexWithFilters()
     {
-        DB::shouldReceive('table->whereDate->where->get')->andReturn(collect([]));
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('whereDate')->with('data_criacao', Carbon::now()->toDateString())->andReturnSelf();
+        $queryMock->shouldReceive('where')->with('situacao', 'pendente')->andReturnSelf();
+        $queryMock->shouldReceive('get')->andReturn(collect([]));
+        DB::shouldReceive('table')->with('tarefa')->andReturn($queryMock);
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET', [
             'data' => Carbon::now()->toDateString(),
@@ -129,7 +137,10 @@ class TarefaControllerTest extends TestCase
 
     public function testIndexWithoutFilters()
     {
-        DB::shouldReceive('table->get')->andReturn(collect([]));
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('get')->andReturn(collect([]));
+        DB::shouldReceive('table')->with('tarefa')->andReturn($queryMock);
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET');
         $response = $controller->index($request);
@@ -138,7 +149,11 @@ class TarefaControllerTest extends TestCase
 
     public function testIndexWithOnlyDataFilter()
     {
-        DB::shouldReceive('table->whereDate->get')->andReturn(collect([]));
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('whereDate')->with('data_criacao', Carbon::now()->toDateString())->andReturnSelf();
+        $queryMock->shouldReceive('get')->andReturn(collect([]));
+        DB::shouldReceive('table')->with('tarefa')->andReturn($queryMock);
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET', [
             'data' => Carbon::now()->toDateString()
@@ -149,7 +164,11 @@ class TarefaControllerTest extends TestCase
 
     public function testIndexWithOnlySituacaoFilter()
     {
-        DB::shouldReceive('table->where->get')->andReturn(collect([]));
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('where')->with('situacao', 'pendente')->andReturnSelf();
+        $queryMock->shouldReceive('get')->andReturn(collect([]));
+        DB::shouldReceive('table')->with('tarefa')->andReturn($queryMock);
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET', [
             'situacao' => 'pendente'
@@ -229,7 +248,12 @@ class TarefaControllerTest extends TestCase
 
     public function testExportPdfWithFilters()
     {
-        DB::shouldReceive('table->whereDate->where->get')->andReturn(collect([]));
+        $queryMock = Mockery::mock();
+        $queryMock->shouldReceive('whereDate')->with('data_criacao', Carbon::now()->toDateString())->andReturnSelf();
+        $queryMock->shouldReceive('where')->with('situacao', 'pendente')->andReturnSelf();
+        $queryMock->shouldReceive('get')->andReturn(collect([]));
+        DB::shouldReceive('table')->with('tarefa')->andReturn($queryMock);
+        
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->andReturnSelf();
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('download')->andReturn(response('pdf-content'));
         $controller = new TarefaController();

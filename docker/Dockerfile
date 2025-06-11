@@ -2,7 +2,10 @@ FROM php:8.3-fpm
 
 RUN apt-get update && apt-get install -y \
     git zip unzip libzip-dev libpng-dev libonig-dev \
+    libpq-dev \
     && docker-php-ext-install pdo pdo_mysql zip mbstring gd
+
+RUN docker-php-ext-install pdo_pgsql pgsql
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 

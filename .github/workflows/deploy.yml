@@ -1,0 +1,27 @@
+name: CD
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to VM via SSH (password)
+        uses: appleboy/ssh-action@v0.7.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd /var/www/html/atividade_GCS/docker
+            docker compose -p production pull    # se usar registry
+            docker compose -p production up -d --build
+            docker compose -p production exec app php artisan migrate --force
+            docker compose -p production exec app php artisan config:cache
+            docker compose -p production exec app php artisan route:cache

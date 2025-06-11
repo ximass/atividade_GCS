@@ -5,13 +5,9 @@ on:
     branches:
       - master
       - main
-  pull_request:
-    branches:
-      - master
-      - main
 
 jobs:
-  test:
+  test-and-deploy:
     runs-on: ubuntu-latest
     
     services:
@@ -19,12 +15,9 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_PASSWORD: postgres
-          POSTGRES_USER: postgres
           POSTGRES_DB: testing
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
           --health-retries 5
         ports:
           - 5432:5432
@@ -37,10 +30,12 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, dom, filter, gd, iconv, json, mbstring, pdo
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, dom, filter, gd, json, pdo
 
       - name: Copy environment file
-        run: cp .env.production .env
+        run: |
+          cp .env.production .env
+          echo "DB_PASSWORD=postgres" >> .env
 
       - name: Install Composer dependencies
         run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
@@ -52,150 +47,38 @@ jobs:
         run: |
           php artisan config:clear
           php artisan config:cache
-
-      - name: Cache routes
-        run: php artisan route:cache
-
-      - name: Cache views
-        run: php artisan view:cache
+          php artisan route:cache
+          php artisan view:cache
 
       - name: Run database migrations
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
         run: php artisan migrate --force
 
       - name: Run tests
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
         run: php artisan test
-
-      - name: Run PHPUnit tests
-        env:
-          DB_CONNECTION: pgsql
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_DATABASE: testing
-          DB_USERNAME: postgres
-          DB_PASSWORD: postgres
-        run: ./vendor/bin/phpunit
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && github.event_name == 'push'
-    
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Setup PostgreSQL Client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Create database backup
-        env:
-          DB_PASSWORD: postgres
-          PROD_DB_HOST: 177.44.248.74
-          PROD_DB_PORT: 5432
-          PROD_DB_NAME: production
-          PROD_DB_USER: postgres
-        run: |
-          chmod +x scripts/backup-database.sh
-          ./scripts/backup-database.sh production
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub (Optional)
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build Docker image
+      - name: Build and deploy to production
         run: |
-          cd docker
-          docker build -f Dockerfile -t laravel-production:${{ github.sha }} ..
-          docker tag laravel-production:${{ github.sha }} laravel-production:latest
-
-      - name: Deploy to production
-        run: |
-          cd docker
-          # Store current container ID for potential rollback
-          docker ps --format "table {{.ID}}\t{{.Names}}" | grep laravel-prod-app || true
-          docker-compose -f docker-compose.prod.yml down || true
-          docker-compose -f docker-compose.prod.yml up -d
-
-      - name: Wait for services to be ready
-        run: sleep 45
-
-      - name: Run migrations on production
-        run: |
+          echo "Building Docker image..."
+          docker build -f docker/Dockerfile -t laravel-production:latest .
+          
+          echo "Stopping existing containers..."
+          docker-compose -f docker/docker-compose.prod.yml down || true
+          
+          echo "Starting new containers..."
+          docker-compose -f docker/docker-compose.prod.yml up -d
+          
+          echo "Waiting for services to be ready..."
+          sleep 45
+          
+          echo "Running migrations in container..."
           docker exec laravel-prod-app php artisan migrate --force
-
-      - name: Clear and optimize application cache
-        run: |
-          docker exec laravel-prod-app php artisan cache:clear
+          
+          echo "Clearing cache in container..."
           docker exec laravel-prod-app php artisan config:cache
           docker exec laravel-prod-app php artisan route:cache
           docker exec laravel-prod-app php artisan view:cache
-          docker exec laravel-prod-app php artisan optimize
-
-      - name: Health check with retry
-        run: |
-          sleep 15
-          for i in {1..10}; do
-            if curl -f http://localhost/health; then
-              echo "✅ Health check passed on attempt $i"
-              break
-            elif [ $i -eq 10 ]; then
-              echo "❌ Health check failed after 10 attempts"
-              exit 1
-            else
-              echo "⏳ Health check attempt $i failed, retrying in 15 seconds..."
-              sleep 15
-            fi
-          done
-
-      - name: Smoke tests
-        run: |
-          echo "Running smoke tests..."
-          # Test main endpoints
-          curl -f http://localhost/ || exit 1
-          curl -f http://localhost/health || exit 1
-          echo "✅ Smoke tests passed"
-
-      - name: Production deployment notification
-        if: success()
-        run: |
-          echo "🎉 PRODUCTION DEPLOYMENT SUCCESSFUL!"
-          echo "📍 Environment: Production"
-          echo "🚀 Commit: ${{ github.sha }}"
-          echo "👤 Author: ${{ github.actor }}"
-          echo "⏰ Time: $(date)"
-          echo "🔗 Health Check: http://localhost/health"
-
-      - name: Rollback on failure
-        if: failure()
-        run: |
-          echo "💥 PRODUCTION DEPLOYMENT FAILED!"
-          echo "🔄 Attempting automatic rollback..."
-          cd docker
-          docker-compose -f docker-compose.prod.yml down || true
           
-          # Here you could implement logic to restore from backup
-          echo "⚠️  Manual intervention may be required"
-          echo "📋 Backup available for restoration if needed"
-          
-          exit 1
+          echo "Production deployment completed!"

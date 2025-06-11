@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Hash;
 
 use App\Http\Controllers\TarefaController;
 use Illuminate\Support\Facades\Auth;
@@ -9,6 +10,15 @@ use App\Models\User;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+// Health check route for CI/CD
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'OK',
+        'timestamp' => now(),
+        'environment' => app()->environment(),
+    ]);
 });
 
 Route::get('/tarefas', [TarefaController::class, 'index']);

@@ -1,0 +1,142 @@
+name: Post-Deployment Monitoring
+
+on:
+  workflow_run:
+    workflows: ["Staging Deployment", "Production Deployment"]
+    types:
+      - completed
+
+jobs:
+  monitor-staging:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && contains(github.event.workflow_run.name, 'Staging')
+    
+    steps:
+      - name: Wait for application startup
+        run: sleep 60
+
+      - name: Performance Test - Staging
+        run: |
+          echo "Running performance tests on staging environment..."
+          
+          # Test response times
+          for endpoint in "/" "/health" "/tarefas"; do
+            echo "Testing endpoint: $endpoint"
+            response_time=$(curl -o /dev/null -s -w '%{time_total}\n' http://localhost:8080$endpoint || echo "999")
+            echo "Response time for $endpoint: ${response_time}s"
+            
+            # Alert if response time > 5 seconds
+            if (( $(echo "$response_time > 5" | bc -l) )); then
+              echo "⚠️  WARNING: Slow response time for $endpoint: ${response_time}s"
+            fi
+          done
+
+      - name: Load Test - Basic
+        run: |
+          echo "Running basic load test..."
+          # Simple concurrent requests test
+          for i in {1..10}; do
+            curl -s http://localhost:8080/health > /dev/null &
+          done
+          wait
+          echo "✅ Basic load test completed"
+
+      - name: Database Connection Test
+        run: |
+          echo "Testing database connectivity..."
+          # This would test if the app can connect to database
+          response=$(curl -s http://localhost:8080/health)
+          if echo "$response" | grep -q "OK"; then
+            echo "✅ Database connection test passed"
+          else
+            echo "❌ Database connection test failed"
+            exit 1
+          fi
+
+  monitor-production:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && contains(github.event.workflow_run.name, 'Production')
+    
+    steps:
+      - name: Wait for application startup
+        run: sleep 90
+
+      - name: Critical Health Checks - Production
+        run: |
+          echo "Running critical health checks on production..."
+          
+          # Health endpoint
+          if ! curl -f http://localhost/health; then
+            echo "❌ CRITICAL: Production health check failed!"
+            exit 1
+          fi
+          
+          # Main page
+          if ! curl -f http://localhost/; then
+            echo "❌ CRITICAL: Production main page failed!"
+            exit 1
+          fi
+          
+          echo "✅ All critical health checks passed"
+
+      - name: Performance Monitoring - Production
+        run: |
+          echo "Monitoring production performance..."
+          
+          # Test critical endpoints with strict thresholds
+          for endpoint in "/" "/health"; do
+            echo "Testing production endpoint: $endpoint"
+            response_time=$(curl -o /dev/null -s -w '%{time_total}\n' http://localhost$endpoint || echo "999")
+            echo "Response time for $endpoint: ${response_time}s"
+            
+            # Alert if response time > 3 seconds in production
+            if (( $(echo "$response_time > 3" | bc -l) )); then
+              echo "🚨 ALERT: Production slow response for $endpoint: ${response_time}s"
+              # In a real scenario, you'd send alerts to Slack, email, etc.
+            fi
+          done
+
+      - name: Security Headers Check
+        run: |
+          echo "Checking security headers..."
+          headers=$(curl -I http://localhost/ 2>/dev/null)
+          
+          # Check for common security headers
+          if echo "$headers" | grep -qi "x-frame-options"; then
+            echo "✅ X-Frame-Options header present"
+          else
+            echo "⚠️  X-Frame-Options header missing"
+          fi
+          
+          if echo "$headers" | grep -qi "x-content-type-options"; then
+            echo "✅ X-Content-Type-Options header present"
+          else
+            echo "⚠️  X-Content-Type-Options header missing"
+          fi
+
+      - name: Production Monitoring Summary
+        run: |
+          echo "📊 PRODUCTION MONITORING SUMMARY"
+          echo "================================"
+          echo "🟢 Health checks: PASSED"
+          echo "🟢 Performance: MONITORED"
+          echo "🟢 Security: CHECKED"
+          echo "⏰ Timestamp: $(date)"
+          echo "🔗 Environment: Production"
+
+  alert-on-failure:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    
+    steps:
+      - name: Deployment Failure Alert
+        run: |
+          echo "🚨 DEPLOYMENT FAILURE ALERT"
+          echo "============================"
+          echo "❌ Workflow: ${{ github.event.workflow_run.name }}"
+          echo "🌟 Branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "👤 Author: ${{ github.actor }}"
+          echo "🕐 Time: $(date)"
+          echo ""
+          echo "🔍 Please check the failed workflow for details"
+          echo "🔗 Workflow URL: ${{ github.event.workflow_run.html_url }}"

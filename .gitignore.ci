@@ -1,0 +1,36 @@
+# Ignore PHPUnit result cache
+.phpunit.result.cache
+
+# Ignore coverage reports
+coverage/
+*.coverage
+
+# Ignore temporary test files
+tests/_temp/
+tests/temp/
+
+# CI/CD specific ignores
+.github/secrets/
+
+# Docker volumes
+docker/data/
+docker/logs/
+
+# Local environment files
+.env.local
+.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

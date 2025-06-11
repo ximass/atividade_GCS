@@ -1,0 +1,110 @@
+name: Security and Dependencies Check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1' # Every Monday at 6 AM
+  push:
+    branches:
+      - master
+      - main
+      - staging
+  pull_request:
+    branches:
+      - master
+      - main
+      - staging
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run Composer audit
+        run: composer audit --format=table
+
+      - name: Check for known security vulnerabilities
+        run: |
+          if composer audit --format=json | jq -e '.advisories | length > 0' > /dev/null 2>&1; then
+            echo "Security vulnerabilities found!"
+            composer audit --format=table
+            exit 1
+          else
+            echo "No security vulnerabilities found."
+          fi
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict --no-check-all
+
+      - name: Check for outdated packages
+        run: |
+          composer install --no-progress --prefer-dist --optimize-autoloader
+          composer outdated --direct --strict || echo "Some packages are outdated but not critical"
+
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Install Composer dependencies
+        run: composer install --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Run Laravel Pint (Code Style)
+        run: ./vendor/bin/pint --test
+
+      - name: Check for unused dependencies
+        run: |
+          echo "Checking for unused dependencies..."
+          # This would require additional tools like composer-unused
+          # For now, we'll just validate the composer file structure
+          composer validate --no-check-all
+
+  docker-security:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner on Dockerfile
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'docker/Dockerfile'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'

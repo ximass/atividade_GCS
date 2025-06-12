@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # STAGING ENVIRONMENT
+  laravel-staging-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: laravel-staging-app
+    restart: unless-stopped
+    volumes:
+      - staging-app:/var/www
+      - staging-storage:/var/www/storage    environment:
+      - APP_ENV=staging
+      - DB_HOST=177.44.248.74
+      - DB_CONNECTION=pgsql
+    networks:
+      - laravel-network
+
+  nginx-staging:
+    image: nginx:alpine
+    container_name: nginx-staging
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - staging-app:/var/www
+      - ./docker/nginx/staging.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - laravel-staging-app
+    networks:
+      - laravel-network
+
+  # PRODUCTION ENVIRONMENT
+  laravel-production-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: laravel-production-app
+    restart: unless-stopped
+    volumes:
+      - production-app:/var/www
+      - production-storage:/var/www/storage    environment:
+      - APP_ENV=production
+      - DB_HOST=177.44.248.74
+      - DB_CONNECTION=pgsql
+    networks:
+      - laravel-network
+
+  nginx-production:
+    image: nginx:alpine
+    container_name: nginx-production
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - production-app:/var/www
+      - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - laravel-production-app
+    networks:
+      - laravel-network
+
+volumes:
+  staging-app:
+  staging-storage:
+  production-app:
+  production-storage:
+
+networks:
+  laravel-network:
+    driver: bridge

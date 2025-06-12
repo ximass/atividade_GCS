@@ -7,10 +7,11 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: laravel-staging-app
-    restart: unless-stopped
+    restart: unless-stopped    
     volumes:
       - staging-app:/var/www
-      - staging-storage:/var/www/storage    environment:
+      - staging-storage:/var/www/storage
+    environment:
       - APP_ENV=staging
       - DB_HOST=177.44.248.74
       - DB_CONNECTION=pgsql
@@ -37,10 +38,10 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     container_name: laravel-production-app
-    restart: unless-stopped
-    volumes:
+    restart: unless-stopped    volumes:
       - production-app:/var/www
-      - production-storage:/var/www/storage    environment:
+      - production-storage:/var/www/storage
+    environment:
       - APP_ENV=production
       - DB_HOST=177.44.248.74
       - DB_CONNECTION=pgsql

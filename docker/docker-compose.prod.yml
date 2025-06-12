@@ -3,14 +3,17 @@ services:
   app:
     build:
       context: ../
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.production
     container_name: laravel-prod-app
     env_file:
       - ../.env.production
     volumes:
-      - ../project-prod:/var/www
+      # Volume separado para storage (uploads, logs, etc.)
+      - laravel_prod_storage:/var/www/storage
+      # Volume para cache do bootstrap
+      - laravel_prod_bootstrap_cache:/var/www/bootstrap/cache
     networks:
-      - laravel_net
+      - laravel_prod_net
 
   nginx:
     image: nginx:stable-alpine
@@ -19,12 +22,17 @@ services:
       - app
     ports:
       - "80:80"
+    volumes_from:
+      - app:ro
     volumes:
-      - ../:/var/www:ro
       - ./nginx/production.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - laravel_net
+      - laravel_prod_net
+
+volumes:
+  laravel_prod_storage:
+  laravel_prod_bootstrap_cache:
 
 networks:
-  laravel_net:
+  laravel_prod_net:
     driver: bridge

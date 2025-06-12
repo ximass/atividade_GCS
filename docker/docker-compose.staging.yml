@@ -3,14 +3,17 @@ services:
   app:
     build:
       context: ../
-      dockerfile: docker/Dockerfile
+      dockerfile: docker/Dockerfile.staging
     container_name: laravel-staging-app
     env_file:
       - ../.env.staging
     volumes:
-      - ../project-staging:/var/www
+      # Volume separado para storage (uploads, logs, etc.)
+      - laravel_staging_storage:/var/www/storage
+      # Volume para cache do bootstrap
+      - laravel_staging_bootstrap_cache:/var/www/bootstrap/cache
     networks:
-      - laravel_net
+      - laravel_staging_net
 
   nginx:
     image: nginx:stable-alpine
@@ -19,12 +22,17 @@ services:
       - app
     ports:
       - "8080:80"
+    volumes_from:
+      - app:ro
     volumes:
-      - ../:/var/www
       - ./nginx/staging.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - laravel_net
+      - laravel_staging_net
+
+volumes:
+  laravel_staging_storage:
+  laravel_staging_bootstrap_cache:
 
 networks:
-  laravel_net:
+  laravel_staging_net:
     driver: bridge

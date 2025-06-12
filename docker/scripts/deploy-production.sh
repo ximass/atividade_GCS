@@ -18,7 +18,8 @@ echo "→ Instalando/atualizando dependências..."
 composer install --no-dev --optimize-autoloader
 
 echo "→ Executando testes..."
-if php artisan test; then
+# Tenta primeiro com artisan test, se falhar usa phpunit diretamente
+if php artisan test 2>/dev/null || ./vendor/bin/phpunit; then
     echo "✅ Testes passaram!"
     
     echo "→ Rodando migrations..."

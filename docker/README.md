@@ -76,6 +76,7 @@ docker exec -it laravel-prod-app /usr/local/bin/deploy.sh
 - Ambos containers compartilhavam o mesmo volume (`../:/var/www`)
 - Git checkout em um container afetava o outro
 - Conflitos entre branches diferentes
+- **Comando `php artisan test` não estava disponível**
 
 ### Solução Implementada
 1. **Dockerfiles separados**: `Dockerfile.staging` e `Dockerfile.production`
@@ -83,6 +84,7 @@ docker exec -it laravel-prod-app /usr/local/bin/deploy.sh
 3. **Redes separadas**: `laravel_staging_net` e `laravel_prod_net`
 4. **Scripts de deploy internos**: Cada container tem seu próprio script
 5. **Build independente**: Código é copiado durante o build, não montado
+6. **Comandos de teste corrigidos**: Scripts agora tentam `php artisan test` primeiro, e usam `./vendor/bin/phpunit` como fallback
 
 ### Benefícios
 - ✅ Isolamento completo entre ambientes
@@ -90,6 +92,16 @@ docker exec -it laravel-prod-app /usr/local/bin/deploy.sh
 - ✅ Deploys independentes
 - ✅ Volumes separados para storage e cache
 - ✅ Configurações específicas por ambiente
+- ✅ Comandos de teste robustos com fallback automático
+
+## 🧪 Testando os Comandos
+
+Você pode testar se os comandos estão funcionando corretamente:
+
+```bash
+# Testar comandos de teste disponíveis
+./docker/scripts/test-commands.sh
+```
 
 ## 📝 Arquivos de Ambiente
 

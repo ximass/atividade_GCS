@@ -63,9 +63,13 @@ services:
 
 volumes:
   staging-app:
+    driver: local
   staging-storage:
+    driver: local
   production-app:
+    driver: local
   production-storage:
+    driver: local
 
 networks:
   laravel-network:

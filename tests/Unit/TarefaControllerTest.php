@@ -13,7 +13,36 @@ use Mockery;
 use Carbon\Carbon;
 
 class TarefaControllerTest extends TestCase
-{
+{    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Mock session store to handle flash methods
+        $sessionStore = Mockery::mock('Illuminate\Session\Store');
+        $sessionStore->shouldReceive('flash')->andReturn(null);
+        $sessionStore->shouldReceive('token')->andReturn('fake-token');
+        $sessionStore->shouldReceive('get')->andReturn(null);
+        $sessionStore->shouldReceive('put')->andReturn(null);
+        
+        // Mock session manager
+        $sessionManager = Mockery::mock('Illuminate\Session\SessionManager');
+        $sessionManager->shouldReceive('driver')->andReturn($sessionStore);
+        
+        $this->app->instance('session', $sessionManager);
+        $this->app->instance('session.store', $sessionStore);
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    private function createController()
+    {
+        // Create controller instance manually to avoid dependency injection
+        return $this->app->make(TarefaController::class);
+    }
     public function testIndexReturnsView()
     {
         $query = Mockery::mock();
@@ -22,7 +51,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'GET');
         $response = $controller->index($request);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
@@ -31,7 +60,7 @@ class TarefaControllerTest extends TestCase
 
     public function testCreateReturnsView()
     {
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->create();
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
         $this->assertEquals('tarefas.create', $response->name());
@@ -46,7 +75,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => 'Teste',
             'data_prevista' => '2025-05-10',
@@ -65,7 +94,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($table);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->show(1);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
         $this->assertEquals('tarefas.show', $response->name());
@@ -79,7 +108,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($table);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->edit(1);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
         $this->assertEquals('tarefas.edit', $response->name());
@@ -96,7 +125,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas/1', 'PUT', [
             'descricao' => 'Atualizado',
             'data_prevista' => '2025-05-11',
@@ -117,7 +146,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($table);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->destroy(1);
         $this->assertTrue($response->isRedirect());
     }
@@ -132,7 +161,7 @@ class TarefaControllerTest extends TestCase
         
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->andReturnSelf();
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('download')->andReturn(response('pdf-content'));
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas/export/pdf', 'GET');
         $response = $controller->exportPdf($request);
         $this->assertEquals('pdf-content', $response->getContent());
@@ -148,7 +177,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'GET', [
             'data' => Carbon::now()->toDateString(),
             'situacao' => 'pendente'
@@ -167,7 +196,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => 'Nova tarefa',
             'data_prevista' => '2025-05-12',
@@ -186,7 +215,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'GET');
         $response = $controller->index($request);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
@@ -201,7 +230,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'GET', [
             'data' => Carbon::now()->toDateString()
         ]);
@@ -218,7 +247,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'GET', [
             'situacao' => 'pendente'
         ]);
@@ -235,7 +264,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => '',
             'data_prevista' => '2025-05-12',
@@ -255,7 +284,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => 'Teste',
             'data_prevista' => '2025-05-12',
@@ -277,7 +306,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas/1', 'PUT', [
             'descricao' => 'Atualizado',
             'data_prevista' => '2025-05-11',
@@ -296,7 +325,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($table);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->show(999);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
     }
@@ -309,7 +338,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($table);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->edit(999);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
     }
@@ -324,7 +353,7 @@ class TarefaControllerTest extends TestCase
         DB::shouldReceive('table')->with('tarefa')->andReturn($table);
         DB::shouldReceive('connection')->andReturnSelf();
         
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $response = $controller->destroy(999);
         $this->assertTrue($response->isRedirect());
     }
@@ -341,7 +370,7 @@ class TarefaControllerTest extends TestCase
         
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->andReturnSelf();
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('download')->andReturn(response('pdf-content'));
-        $controller = new TarefaController();
+        $controller = $this->createController();
         $request = Request::create('/tarefas/export/pdf', 'GET', [
             'data' => Carbon::now()->toDateString(),
             'situacao' => 'pendente'

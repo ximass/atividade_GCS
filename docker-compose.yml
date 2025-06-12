@@ -32,13 +32,13 @@ services:
     networks:
       - laravel-network
 
-  # PRODUCTION ENVIRONMENT
-  laravel-production-app:
+  # PRODUCTION ENVIRONMENT  laravel-production-app:
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: laravel-production-app
-    restart: unless-stopped    volumes:
+    restart: unless-stopped
+    volumes:
       - production-app:/var/www
       - production-storage:/var/www/storage
     environment:

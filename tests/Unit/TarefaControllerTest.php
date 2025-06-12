@@ -16,7 +16,12 @@ class TarefaControllerTest extends TestCase
 {
     public function testIndexReturnsView()
     {
-        DB::shouldReceive('table->get')->andReturn(collect([]));
+        $query = Mockery::mock();
+        $query->shouldReceive('get')->andReturn(collect([]));
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET');
         $response = $controller->index($request);
@@ -34,8 +39,13 @@ class TarefaControllerTest extends TestCase
 
     public function testStoreInsertsData()
     {
-        DB::shouldReceive('table->insert')->once();
+        $table = Mockery::mock();
+        $table->shouldReceive('insert')->once();
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => 'Teste',
@@ -49,7 +59,12 @@ class TarefaControllerTest extends TestCase
 
     public function testShowReturnsView()
     {
-        DB::shouldReceive('table->find')->andReturn((object)['id'=>1]);
+        $table = Mockery::mock();
+        $table->shouldReceive('find')->with(1)->andReturn((object)['id'=>1]);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $response = $controller->show(1);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
@@ -58,7 +73,12 @@ class TarefaControllerTest extends TestCase
 
     public function testEditReturnsView()
     {
-        DB::shouldReceive('table->find')->andReturn((object)['id'=>1]);
+        $table = Mockery::mock();
+        $table->shouldReceive('find')->with(1)->andReturn((object)['id'=>1]);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $response = $controller->edit(1);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
@@ -67,8 +87,15 @@ class TarefaControllerTest extends TestCase
 
     public function testUpdateUpdatesData()
     {
-        DB::shouldReceive('table->where->update')->once();
+        $table = Mockery::mock();
+        $where = Mockery::mock();
+        $where->shouldReceive('update')->once();
+        $table->shouldReceive('where')->with('id', 1)->andReturn($where);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas/1', 'PUT', [
             'descricao' => 'Atualizado',
@@ -82,7 +109,14 @@ class TarefaControllerTest extends TestCase
 
     public function testDestroyDeletesData()
     {
-        DB::shouldReceive('table->where->delete')->once();
+        $table = Mockery::mock();
+        $where = Mockery::mock();
+        $where->shouldReceive('delete')->once();
+        $table->shouldReceive('where')->with('id', 1)->andReturn($where);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $response = $controller->destroy(1);
         $this->assertTrue($response->isRedirect());
@@ -90,7 +124,12 @@ class TarefaControllerTest extends TestCase
 
     public function testExportPdfDownloadsFile()
     {
-        DB::shouldReceive('table->get')->andReturn(collect([]));
+        $query = Mockery::mock();
+        $query->shouldReceive('get')->andReturn(collect([]));
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->andReturnSelf();
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('download')->andReturn(response('pdf-content'));
         $controller = new TarefaController();
@@ -107,6 +146,7 @@ class TarefaControllerTest extends TestCase
         $query->shouldReceive('get')->andReturn(collect([]));
         
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
         
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET', [
@@ -120,8 +160,13 @@ class TarefaControllerTest extends TestCase
 
     public function testStoreWithAllFields()
     {
-        DB::shouldReceive('table->insert')->once();
+        $table = Mockery::mock();
+        $table->shouldReceive('insert')->once();
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => 'Nova tarefa',
@@ -135,7 +180,12 @@ class TarefaControllerTest extends TestCase
 
     public function testIndexWithoutFilters()
     {
-        DB::shouldReceive('table->get')->andReturn(collect([]));
+        $query = Mockery::mock();
+        $query->shouldReceive('get')->andReturn(collect([]));
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET');
         $response = $controller->index($request);
@@ -149,6 +199,7 @@ class TarefaControllerTest extends TestCase
         $query->shouldReceive('get')->andReturn(collect([]));
         
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
         
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET', [
@@ -165,6 +216,7 @@ class TarefaControllerTest extends TestCase
         $query->shouldReceive('get')->andReturn(collect([]));
         
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
         
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'GET', [
@@ -176,8 +228,13 @@ class TarefaControllerTest extends TestCase
 
     public function testStoreWithDescricaoVazia()
     {
-        DB::shouldReceive('table->insert')->once();
+        $table = Mockery::mock();
+        $table->shouldReceive('insert')->once();
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => '',
@@ -191,8 +248,13 @@ class TarefaControllerTest extends TestCase
 
     public function testStoreWithNullDataEncerramento()
     {
-        DB::shouldReceive('table->insert')->once();
+        $table = Mockery::mock();
+        $table->shouldReceive('insert')->once();
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas', 'POST', [
             'descricao' => 'Teste',
@@ -206,8 +268,15 @@ class TarefaControllerTest extends TestCase
 
     public function testUpdateWithNullDataEncerramento()
     {
-        DB::shouldReceive('table->where->update')->once();
+        $table = Mockery::mock();
+        $where = Mockery::mock();
+        $where->shouldReceive('update')->once();
+        $table->shouldReceive('where')->with('id', 1)->andReturn($where);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
         Log::shouldReceive('info')->once();
+        
         $controller = new TarefaController();
         $request = Request::create('/tarefas/1', 'PUT', [
             'descricao' => 'Atualizado',
@@ -221,7 +290,12 @@ class TarefaControllerTest extends TestCase
 
     public function testShowWithInvalidId()
     {
-        DB::shouldReceive('table->find')->andReturn(null);
+        $table = Mockery::mock();
+        $table->shouldReceive('find')->with(999)->andReturn(null);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $response = $controller->show(999);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
@@ -229,7 +303,12 @@ class TarefaControllerTest extends TestCase
 
     public function testEditWithInvalidId()
     {
-        DB::shouldReceive('table->find')->andReturn(null);
+        $table = Mockery::mock();
+        $table->shouldReceive('find')->with(999)->andReturn(null);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $response = $controller->edit(999);
         $this->assertInstanceOf(\Illuminate\View\View::class, $response);
@@ -237,7 +316,14 @@ class TarefaControllerTest extends TestCase
 
     public function testDestroyWithInvalidId()
     {
-        DB::shouldReceive('table->where->delete')->once();
+        $table = Mockery::mock();
+        $where = Mockery::mock();
+        $where->shouldReceive('delete')->once();
+        $table->shouldReceive('where')->with('id', 999)->andReturn($where);
+        
+        DB::shouldReceive('table')->with('tarefa')->andReturn($table);
+        DB::shouldReceive('connection')->andReturnSelf();
+        
         $controller = new TarefaController();
         $response = $controller->destroy(999);
         $this->assertTrue($response->isRedirect());
@@ -251,6 +337,7 @@ class TarefaControllerTest extends TestCase
         $query->shouldReceive('get')->andReturn(collect([]));
         
         DB::shouldReceive('table')->with('tarefa')->andReturn($query);
+        DB::shouldReceive('connection')->andReturnSelf();
         
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('loadView')->andReturnSelf();
         \Barryvdh\DomPDF\Facade\Pdf::shouldReceive('download')->andReturn(response('pdf-content'));

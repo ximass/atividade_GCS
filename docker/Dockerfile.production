@@ -22,7 +22,8 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Cria script de deployment
 COPY docker/scripts/deploy-production.sh /usr/local/bin/deploy.sh
-RUN chmod +x /usr/local/bin/deploy.sh
+COPY docker/scripts/test-container-db.sh /usr/local/bin/test-container-db.sh
+RUN chmod +x /usr/local/bin/deploy.sh /usr/local/bin/test-container-db.sh
 
 EXPOSE 9000
 CMD ["php-fpm"]

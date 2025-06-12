@@ -30,6 +30,12 @@ docker/
 
 **Para Windows (PowerShell):**
 ```powershell
+# Diagnóstico completo do ambiente
+.\docker\scripts\diagnose-all.ps1
+
+# Correções automáticas
+.\docker\scripts\fix-common-issues.ps1
+
 # Deploy do ambiente Staging
 .\docker\scripts\build-staging.ps1
 
@@ -102,6 +108,28 @@ Você pode testar se os comandos estão funcionando corretamente:
 # Testar comandos de teste disponíveis
 ./docker/scripts/test-commands.sh
 ```
+
+## 🔍 Testando Conectividade com Banco Externo
+
+```powershell
+# Teste de conectividade básica (Windows)
+.\docker\scripts\test-db-connection.ps1
+
+# Teste dentro do container após build
+docker exec -it laravel-staging-app /usr/local/bin/test-container-db.sh
+```
+
+## 🚨 Problemas de Conectividade?
+
+Se estiver enfrentando problemas de conexão com o banco PostgreSQL externo, consulte:
+
+📖 **[Guia de Troubleshooting](TROUBLESHOOTING.md)**
+
+Problemas comuns incluem:
+- Configuração `pg_hba.conf` do PostgreSQL
+- Configuração SSL
+- Firewall bloqueando conexões
+- Problemas de rede Docker
 
 ## 📝 Arquivos de Ambiente
 

@@ -14,6 +14,16 @@ services:
       - laravel_staging_bootstrap_cache:/var/www/bootstrap/cache
     networks:
       - laravel_staging_net
+    # Adiciona configuração de DNS para resolução externa
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    # Permite acesso a redes externas
+    external_links:
+      - postgres-external
+    # Configuração adicional para conectividade externa
+    extra_hosts:
+      - "postgres-server:177.44.248.74"
 
   nginx:
     image: nginx:stable-alpine
@@ -36,3 +46,7 @@ volumes:
 networks:
   laravel_staging_net:
     driver: bridge
+    # Permite acesso a redes externas
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"

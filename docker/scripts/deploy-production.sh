@@ -17,6 +17,16 @@ git pull origin master || {
 echo "→ Instalando/atualizando dependências..."
 composer install --no-dev --optimize-autoloader
 
+echo "→ Testando conectividade com banco de dados..."
+if php artisan tinker --execute="DB::connection()->getPdo(); echo 'OK';" > /dev/null 2>&1; then
+    echo "✅ Conexão with banco bem-sucedida!"
+else
+    echo "❌ Falha na conexão com banco de dados!"
+    echo "   Detalhes do erro:"
+    php artisan tinker --execute="try { DB::connection()->getPdo(); } catch (Exception \$e) { echo \$e->getMessage(); }" 2>&1
+    exit 1
+fi
+
 echo "→ Executando testes..."
 # Tenta primeiro com artisan test, se falhar usa phpunit diretamente
 if php artisan test 2>/dev/null || ./vendor/bin/phpunit; then

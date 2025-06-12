@@ -32,7 +32,8 @@ services:
     networks:
       - laravel-network
 
-  # PRODUCTION ENVIRONMENT  laravel-production-app:
+  # PRODUCTION ENVIRONMENT
+  laravel-production-app:
     build:
       context: .
       dockerfile: docker/Dockerfile

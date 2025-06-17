@@ -1,26 +1,24 @@
-# project-root/Dockerfile
 FROM php:8.3-fpm
 
 WORKDIR /var/www/html
 
-# 1) Build‑args: URL do repositório e branch
+# Build args: repositório e branch
 ARG GIT_REPO=https://github.com/ximass/atividade_GCS.git
 ARG GIT_BRANCH=master
 
-# 2) Instala Git, dependências e extensão Postgres
+# Instalações
 RUN apt-get update \
  && apt-get install -y git unzip libpq-dev \
  && docker-php-ext-install pdo pdo_pgsql
 
-# 3) Clona somente a branch desejada
-RUN git clone --depth=1 --branch "$GIT_BRANCH" "$GIT_REPO" . \
- && rm -rf .git
+# Clona a branch e mantém .git para futuros pulls
+RUN git clone --depth=1 --branch "$GIT_BRANCH" "$GIT_REPO" .
 
-# 4) Composer
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN composer install --no-dev --optimize-autoloader
 
-# 5) Permissões
+# Permissões
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 9000

@@ -2,12 +2,12 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Listagem de Tarefas</title>
+    <title>Listagem de Tarefas 1</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Listagem de Tarefas</h1>
+        <h1 class="mb-4">Listagem de Tarefas 2</h1>
         <a href="{{ route('tarefas.create') }}" class="btn btn-primary mb-3">Nova Tarefa</a>
         <a href="{{ route('tarefas.export.pdf', request()->all()) }}" class="btn btn-danger mb-3 ms-2">Exportar para PDF</a>
 

@@ -10,8 +10,6 @@ services:
     container_name: laravel-staging-app
     env_file:
       - ../.env.staging
-    volumes:
-      - ../:/var/www/html:delegated
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

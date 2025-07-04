@@ -7,7 +7,7 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Listagem de Tarefas 1</h1>
+        <h1 class="mb-4">Listagem de Tarefas 2</h1>
         <a href="{{ route('tarefas.create') }}" class="btn btn-primary mb-3">Nova Tarefa</a>
         <a href="{{ route('tarefas.export.pdf', request()->all()) }}" class="btn btn-danger mb-3 ms-2">Exportar para PDF</a>
 
